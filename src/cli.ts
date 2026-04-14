@@ -18,7 +18,7 @@ for (const op of operations) {
 }
 
 // CLI-only commands that bypass the operation layer
-const CLI_ONLY = new Set(['init', 'upgrade', 'post-upgrade', 'check-update', 'integrations', 'publish', 'check-backlinks', 'lint', 'report', 'import', 'export', 'files', 'embed', 'serve', 'call', 'config', 'doctor', 'migrate']);
+const CLI_ONLY = new Set(['init', 'upgrade', 'post-upgrade', 'check-update', 'integrations', 'publish', 'check-backlinks', 'lint', 'report', 'import', 'export', 'files', 'embed', 'serve', 'call', 'config', 'doctor', 'migrate', 'eval']);
 
 async function main() {
   const args = process.argv.slice(2);
@@ -326,6 +326,11 @@ async function handleCliOnly(command: string, args: string[]) {
       case 'migrate': {
         const { runMigrateEngine } = await import('./commands/migrate-engine.ts');
         await runMigrateEngine(engine, args);
+        break;
+      }
+      case 'eval': {
+        const { runEvalCommand } = await import('./commands/eval.ts');
+        await runEvalCommand(engine, args);
         break;
       }
     }

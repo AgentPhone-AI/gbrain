@@ -6,6 +6,10 @@ All notable changes to GBrain will be documented in this file.
 
 ### Added
 
+- **Search understands what you're asking. +21% page coverage, +29% signal, 100% source accuracy.** A zero-latency intent classifier reads your query and picks the right search mode. "Who is Alice?" surfaces your compiled truth assessment. "When did we last meet?" surfaces timeline entries with dates. No LLM call, just pattern matching. Your agent sees 8.7 relevant pages per query instead of 7.2, and two thirds of returned chunks are now distilled assessments instead of half. Entity lookups always lead with compiled truth. Temporal queries always find the dates. Benchmarked against 29 pages, 20 queries with graded relevance (run `bun run test/benchmark-search-quality.ts` to reproduce). Inspired by Ramp Labs' "Latent Briefing" paper (April 2026).
+- **`gbrain query --detail low/medium/high`.** Agents can control how deep search goes. `low` returns compiled truth only. `medium` (default) returns everything with dedup. `high` returns all chunks uncapped. Auto-escalates from low to high if no results found. MCP picks it up automatically.
+- **`gbrain eval` measures search quality.** Full retrieval evaluation harness with P@k, R@k, MRR, nDCG@k metrics. A/B comparison mode for parameter tuning: `gbrain eval --qrels queries.json --config-a baseline.json --config-b boosted.json`. Contributed by @4shut0sh.
+- **CJK queries expand correctly.** Chinese, Japanese, and Korean text was silently skipping query expansion because word count used space-delimited splitting. Now counts characters for CJK. Contributed by @YIING99.
 - **Health checks speak a typed language now.** Recipe `health_checks` use a typed DSL (`http`, `env_exists`, `command`, `any_of`) instead of raw shell strings. No more `execSync(untrustedYAML)`. Your agent runs `gbrain integrations doctor` and gets structured results, not shell injection risk. All 7 first-party recipes migrated. String health checks still work (with deprecation warning) for backward compat.
 
 ### Fixed

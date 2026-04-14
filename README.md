@@ -471,6 +471,10 @@ The compiled truth is the answer. The timeline is the proof.
 ```
 Query: "when should you ignore conventional wisdom?"
          |
+    Intent classifier (zero-latency, no LLM)
+    → entity? temporal? event? general?
+    → auto-selects detail level
+         |
     Multi-query expansion (Claude Haiku)
     "contrarian thinking startups", "going against the crowd"
          |
@@ -483,19 +487,27 @@ Query: "when should you ignore conventional wisdom?"
     +----+----+
          |
     RRF Fusion: score = sum(1/(60 + rank))
+    → normalize to 0-1
+    → 2x compiled truth boost (entity queries)
          |
-    4-Layer Dedup
-    1. Best chunk per page
-    2. Cosine similarity > 0.85
+    Cosine re-scoring (0.7 * RRF + 0.3 * cosine)
+    → query-specific chunk ranking
+         |
+    4-Layer Dedup + compiled truth guarantee
+    1. Top 3 chunks per page
+    2. Text similarity > 0.85
     3. Type diversity (60% cap)
-    4. Per-page chunk cap
-         |
-    Stale alerts (compiled truth older than latest timeline)
+    4. Per-page chunk cap (2)
+    5. Guarantee compiled truth per page
          |
     Results
 ```
 
 Keyword search alone misses conceptual matches. "Ignore conventional wisdom" won't find an essay titled "The Bus Ticket Theory of Genius" even though it's exactly about that. Vector search alone misses exact phrases when the embedding is diluted by surrounding text. RRF fusion gets both right. Multi-query expansion catches phrasings you didn't think of.
+
+The query intent classifier reads your query and picks the right search mode. "Who is Alice?" surfaces compiled truth assessments. "When did we last meet Alice?" surfaces timeline entries with dates. No LLM call, just pattern matching. Use `--detail low/medium/high` to override.
+
+Search quality is benchmarked: 29 fictional pages, 20 queries, graded relevance. Run `bun run test/benchmark-search-quality.ts` to reproduce. Measure changes with `gbrain eval --qrels queries.json`.
 
 ## Database schema
 

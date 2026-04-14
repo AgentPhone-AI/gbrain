@@ -29,6 +29,9 @@ markdown files (tool-agnostic, work with both CLI and plugin contexts).
 - `src/core/file-resolver.ts` — File resolution with fallback chain (local -> .redirect.yaml -> .redirect -> .supabase)
 - `src/core/chunkers/` — 3-tier chunking (recursive, semantic, LLM-guided)
 - `src/core/search/` — Hybrid search: vector + keyword + RRF + multi-query expansion + dedup
+- `src/core/search/intent.ts` — Query intent classifier (entity/temporal/event/general → auto-selects detail level)
+- `src/core/search/eval.ts` — Retrieval eval harness: P@k, R@k, MRR, nDCG@k metrics + runEval() orchestrator
+- `src/commands/eval.ts` — `gbrain eval` command: single-run table + A/B config comparison
 - `src/core/embedding.ts` — OpenAI text-embedding-3-large, batch, retry, backoff
 - `src/mcp/server.ts` — MCP stdio server (generated from operations)
 - `src/commands/auth.ts` — Standalone token management (create/list/revoke/test)
@@ -50,6 +53,7 @@ markdown files (tool-agnostic, work with both CLI and plugin contexts).
 - `docs/guides/diligence-ingestion.md` — Data room to brain pages pipeline
 - `docs/designs/HOMEBREW_FOR_PERSONAL_AI.md` — 10-star vision for integration system
 - `docs/mcp/` — Per-client setup guides (Claude Desktop, Code, Cowork, Perplexity)
+- `docs/benchmarks/` — Search quality benchmark results (reproducible, fictional data)
 - `skills/_brain-filing-rules.md` — Cross-cutting brain filing rules (referenced by all brain-writing skills)
 - `skills/migrations/` — Version migration files with feature_pitch YAML frontmatter
 - `src/commands/publish.ts` — Deterministic brain page publisher (code+skill pair, zero LLM calls)
@@ -68,7 +72,7 @@ Key commands added in v0.7:
 
 ## Testing
 
-`bun test` runs all tests (23 unit test files + 4 E2E test files). Unit tests run
+`bun test` runs all tests (28 unit test files + 5 E2E test files). Unit tests run
 without a database. E2E tests skip gracefully when `DATABASE_URL` is not set.
 
 Unit tests: `test/markdown.test.ts` (frontmatter parsing), `test/chunkers/recursive.test.ts`
@@ -87,10 +91,15 @@ parity), `test/cli.test.ts` (CLI structure), `test/config.test.ts` (config redac
 `test/publish.test.ts` (content stripping, encryption, password generation, HTML output),
 `test/backlinks.test.ts` (entity extraction, back-link detection, timeline entry generation),
 `test/lint.test.ts` (LLM artifact detection, code fence stripping, frontmatter validation),
-`test/report.test.ts` (report format, directory structure).
+`test/report.test.ts` (report format, directory structure),
+`test/search.test.ts` (RRF normalization, compiled truth boost, cosine similarity, dedup key),
+`test/dedup.test.ts` (source-aware dedup, compiled truth guarantee, layer interactions),
+`test/intent.test.ts` (query intent classification: entity/temporal/event/general),
+`test/eval.test.ts` (retrieval metrics: precisionAtK, recallAtK, mrr, ndcgAtK, parseQrels).
 
 E2E tests (`test/e2e/`): Run against real Postgres+pgvector. Require `DATABASE_URL`.
 - `bun run test:e2e` runs Tier 1 (mechanical, all operations, no API keys)
+- `test/e2e/search-quality.test.ts` runs search quality E2E against PGLite (no API keys, in-memory)
 - `test/e2e/upgrade.test.ts` runs check-update E2E against real GitHub API (network required)
 - Tier 2 (`skills.test.ts`) requires OpenClaw + API keys, runs nightly in CI
 - If `.env.testing` doesn't exist in this directory, check sibling worktrees for one:
@@ -194,6 +203,9 @@ upgrade, not document the implementation.
   silent sync failures and stale embeddings before they bite you"
 - Bad: "Setup skill Phase H and Phase I added"
 - Good: "New installs automatically set up live sync so your brain never falls behind"
+- **Always credit community contributions.** When a CHANGELOG entry includes work from
+  a community PR, name the contributor with `Contributed by @username`. Contributors
+  did real work. Thank them publicly every time, no exceptions.
 
 ## Version migrations
 
