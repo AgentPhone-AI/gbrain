@@ -1,6 +1,35 @@
-# GBrain
+# GBrain + AgentPhone
+
+> **Fork by [AgentPhone](https://agentphone.to)** — replaces the 10-step DIY Twilio voice recipe with 3 API calls. Voice + iMessage on the same number, zero infrastructure.
 
 Your AI agent is smart but it doesn't know anything about your life. GBrain fixes that. Meetings, emails, tweets, calendar events, voice calls, original ideas... all of it flows into a searchable knowledge base that your agent reads before every response and writes to after every conversation. The agent gets smarter every day.
+
+## Voice-to-Brain: AgentPhone vs DIY
+
+The original GBrain voice recipe ([`recipes/twilio-voice-brain.md`](recipes/twilio-voice-brain.md)) requires 10 setup steps, 3 accounts (Twilio + OpenAI + ngrok), a custom Node.js WebSocket server, and a watchdog cron — and documents production bugs including Unicode crashes, PII leaks, and dead air.
+
+**AgentPhone replaces all of it with 3 API calls:**
+
+```bash
+# 1. Create agent
+curl -X POST https://api.agentphone.to/v1/agents \
+  -H "Authorization: Bearer $API_KEY" \
+  -d '{"name": "Brain Agent", "voiceMode": "hosted", "systemPrompt": "..."}'
+
+# 2. Buy number + attach
+curl -X POST https://api.agentphone.to/v1/numbers \
+  -d '{"country": "US", "agentId": "AGENT_ID"}'
+
+# 3. Call → transcript → brain page via iMessage
+curl -X POST https://api.agentphone.to/v1/calls \
+  -d '{"agentId": "AGENT_ID", "toNumber": "+1234567890"}'
+```
+
+Voice calls + iMessage on the same number. Transcripts delivered automatically. No Twilio, no ngrok, no Node.js server.
+
+See the full recipe: [`recipes/agentphone-voice-brain.md`](recipes/agentphone-voice-brain.md)
+
+---
 
 > **~30 minutes to a fully working brain.** Your agent does the work. Database ready in 2 seconds (PGLite, no server). Schema, import, embeddings, and integrations take 15-30 minutes depending on brain size. You just answer questions about API keys.
 >
